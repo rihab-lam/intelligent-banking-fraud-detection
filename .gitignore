@@ -1,0 +1,11 @@
+*.pkl
+*.csv
+backend/data/
+.env
+*.db
+__pycache__/
+.venv/
+venv/
+*.pyc
+*.sqlite3
+secrets.toml
