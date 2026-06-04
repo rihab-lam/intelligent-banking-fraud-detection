@@ -7,6 +7,7 @@ from datetime import datetime
 # --- CONFIGURATION DES URLS BACKEND ---
 URL_AUTH = "http://127.0.0.1:8081"
 URL_ML = "http://127.0.0.1:8002"
+URL_TRANSACTION = "http://127.0.0.1:8000"
 
 # --- CONFIGURATION DE LA PAGE ---
 st.set_page_config(
@@ -379,16 +380,48 @@ else:
             """, unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
-    # ==========================================================================
+    # ==============================================================================
+    # PAGE : TRANSACTIONS
+    # ==============================================================================
+    elif st.session_state.page == "transactions":
+        st.markdown("<h1>📈 Transactions</h1>", unsafe_allow_html=True)
+        st.markdown("Liste des transactions analysées par le moteur de détection.")
+
+        try:
+            response = requests.get(f"{URL_TRANSACTION}/transactions/", timeout=3)
+
+            if response.status_code == 200:
+                transactions = response.json()
+
+                if transactions:
+                    st.dataframe(transactions, use_container_width=True)
+
+                    fraudes = [
+                        tx for tx in transactions
+                        if tx.get("decision") == "fraude"
+                    ]
+
+                    col1, col2 = st.columns(2)
+                    col1.metric("Total transactions", len(transactions))
+                    col2.metric("Fraudes détectées", len(fraudes))
+                else:
+                    st.warning("Aucune transaction trouvée pour le moment.")
+            else:
+                st.error("Erreur lors de la récupération des transactions.")
+
+        except requests.exceptions.RequestException:
+            st.error("Impossible de se connecter au backend transactionnel.")
+
+    # ==============================================================================
     # PAGES SATELLITES
-    # ==========================================================================
-    elif st.session_state.page in ["transactions", "alertes", "statistiques", "comptes", "parametres", "rapports"]:
+    # ==============================================================================
+    elif st.session_state.page in ["alertes", "statistiques", "comptes", "parametres", "rapports"]:
         st.markdown(f"<h1>📂 Section {st.session_state.page.replace('_', ' ').capitalize()}</h1>", unsafe_allow_html=True)
         st.info("Interface connectée à la base de données PostgreSQL centrale.")
 
-    # ==========================================================================
+    # ==============================================================================
     # PAGE : MODÈLE IA (RANDOM FOREST METRICS)
-    # ==========================================================================
+    # ==============================================================================
     elif st.session_state.page == "modele_ia":
         st.markdown("<h1>🤖 Métriques Algorithmiques (Random Forest)</h1>", unsafe_allow_html=True)
         st.markdown("---")
